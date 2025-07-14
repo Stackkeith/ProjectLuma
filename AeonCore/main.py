@@ -14,15 +14,34 @@ from multiprocessing import Process, Queue
 
 class ConsciousnessModel:
     def __init__(self, params):
-        """Initialize ConsciousnessModel with aligned parameters."""
+        """
+        Initialize the ConsciousnessModel with provided parameters and set up the time range for simulation.
+        
+        Parameters:
+            params (dict): Dictionary of model parameters for consciousness and awareness dynamics.
+        """
         self.params = params
         self.time_range = np.linspace(0, 50, 250)  # Reduced steps for efficiency
         self.emergence_trajectory = None
         self.awareness_trajectory = None
 
     def consciousness_dynamics(self, queue=None):
-        """Solve differential equations for consciousness and awareness."""
+        """
+        Solves the system of differential equations modeling the dynamics of consciousness and awareness over time.
+        
+        If a multiprocessing queue is provided, the computed emergence and awareness trajectories are sent to the queue.
+        """
         def system_dynamics(t, y):
+            """
+            Defines the system of differential equations governing the evolution of consciousness and awareness over time.
+            
+            Parameters:
+                t (float): Current time point.
+                y (list or np.ndarray): Current values of consciousness and awareness.
+            
+            Returns:
+                list: Derivatives [d_consciousness_dt, d_awareness_dt] representing the rates of change for consciousness and awareness.
+            """
             consciousness, awareness = y
             d_consciousness_dt = (
                 self.params["information_density"] * consciousness -
@@ -45,14 +64,30 @@ class ConsciousnessModel:
             queue.put((self.emergence_trajectory, self.awareness_trajectory))
 
     def quantum_information_integration(self, S_0=2.8677):
-        """Compute integrated information with normalized entropy."""
+        """
+        Calculates integrated information and normalized entropy from the emergence and awareness trajectories.
+        
+        Parameters:
+        	S_0 (float): Baseline entropy value used for normalization. Default is 2.8677.
+        
+        Returns:
+        	dict: Contains 'integrated_information' (float) as the product of final emergence, awareness, and entropy, and 'entropy' (float) as the normalized entropy.
+        """
         entropy = stats.entropy(self.emergence_trajectory + 1e-10)
         integrated_information = self.emergence_trajectory[-1] * self.awareness_trajectory[-1] * entropy
         normalized_entropy = S_0 - entropy
         return {'integrated_information': integrated_information, 'entropy': normalized_entropy}
 
     def generate_consciousness_network(self, num_nodes=10):
-        """Generate network for consciousness interactions."""
+        """
+        Constructs an undirected graph representing consciousness elements, connecting nodes based on the product of final emergence and awareness values modulated by randomness.
+        
+        Parameters:
+            num_nodes (int): Number of nodes representing consciousness elements in the network.
+        
+        Returns:
+            network (networkx.Graph): An undirected graph where edges represent probabilistic interactions between consciousness elements, weighted by connection strength.
+        """
         network = nx.Graph()
         for i in range(num_nodes):
             network.add_node(i)
@@ -66,7 +101,12 @@ class ConsciousnessModel:
         return network
 
     def generate_philosophical_interpretation(self):
-        """Philosophical interpretation of system state."""
+        """
+        Return a categorical philosophical interpretation of the current system state based on integrated information and awareness levels.
+        
+        Returns:
+            dict: A dictionary with 'State' and 'Meaning' keys describing the level of consciousness, ranging from pre-conscious dynamics to self-reflective consciousness.
+        """
         info = self.quantum_information_integration()
         integrated_info = info['integrated_information']
         awareness = self.awareness_trajectory[-1]
@@ -81,7 +121,13 @@ class ConsciousnessModel:
 
 class AeonCore:
     def __init__(self, random_seed: int = 42, graph_path: str = "graph.json"):
-        """Initialize AeonCore with ConsciousnessModel integration."""
+        """
+        Initialize the AeonCore system with integrated graph structure, agent metadata, neural modulator, and optional persistent state loading.
+        
+        Parameters:
+            random_seed (int): Seed for random number generation to ensure reproducibility.
+            graph_path (str): Path to the JSON file for saving and loading the graph state.
+        """
         self.random_seed = random_seed
         np.random.seed(self.random_seed)
         self.G = nx.DiGraph()
@@ -106,7 +152,12 @@ class AeonCore:
         self.consciousness_model = None
 
     def map_parameters(self):
-        """Map ConsciousnessModel parameters to AeonCore metrics."""
+        """
+        Return a fixed mapping of ConsciousnessModel parameter names to AeonCore metric values.
+        
+        Returns:
+            dict: Dictionary mapping parameter names to their corresponding metric values.
+        """
         return {
             "information_density": 0.0002,  # ΔS
             "decoherence_rate": 0.03,      # DED noise
@@ -117,26 +168,45 @@ class AeonCore:
         }
 
     def run_consciousness_dynamics(self, queue=None):
-        """Run ConsciousnessModel in parallel and cache results."""
+        """
+        Runs the ConsciousnessModel dynamics using mapped parameters and optionally communicates results via a multiprocessing queue.
+        
+        If a queue is provided, results from the consciousness dynamics are sent through the queue for parallel processing.
+        """
         params = self.map_parameters()
         self.consciousness_model = ConsciousnessModel(params)
         self.consciousness_model.consciousness_dynamics(queue)
 
     def compute_kl_divergence(self, p: np.ndarray, q: np.ndarray) -> float:
-        """Compute KL divergence for entropy alignment."""
+        """
+        Calculate the Kullback-Leibler (KL) divergence between two probability distributions.
+        
+        Parameters:
+            p (np.ndarray): The first probability distribution.
+            q (np.ndarray): The second probability distribution.
+        
+        Returns:
+            float: The KL divergence value measuring how distribution q diverges from p.
+        """
         p = p + 1e-10
         q = q + 1e-10
         return stats.entropy(p, q)
 
     def save_state(self):
-        """Save graph and metadata to JSON."""
+        """
+        Serialize and save the current graph and metadata to a JSON file specified by the object's graph path.
+        """
         graph_data = nx.node_link_data(self.G)
         data = {"graph": graph_data, "metadata": self.metadata}
         with open(self.graph_path, 'w') as f:
             json.dump(data, f)
 
     def load_state(self):
-        """Load graph from JSON if exists."""
+        """
+        Load the graph and metadata from a JSON file if it exists.
+        
+        Restores the internal graph structure and associated metadata from the file specified by `self.graph_path`.
+        """
         if os.path.exists(self.graph_path):
             with open(self.graph_path, 'r') as f:
                 data = json.load(f)
@@ -146,7 +216,11 @@ class AeonCore:
     def add_cme_event(self, state: np.ndarray, intent: np.ndarray, outcome: str, 
                      receptivity: float, cq: float, timestamp: float, glyph: str, 
                      notes: str, source_agent: str = "Unknown"):
-        """Add CME-LOG event to graph."""
+        """
+                     Add a CME-LOG event to the graph, representing a state, intent, and outcome, and link them with directed edges.
+                     
+                     Creates new nodes for the provided state, intent, and outcome, attaches relevant attributes, and connects them to reflect causal and motivational relationships. Additionally, adds similarity edges between the new state node and existing state nodes if their cosine similarity exceeds 0.8.
+                     """
         state_node = f"state_{len(self.G.nodes)}"
         intent_node = f"intent_{len(self.G.nodes)}"
         outcome_node = f"outcome_{len(self.G.nodes)}"
@@ -166,7 +240,16 @@ class AeonCore:
                     self.G.add_edge(state_node, node, type="similar_to", weight=sim)
 
     def calculate_ric(self, state_history: List[np.ndarray], window: int = 10) -> List[float]:
-        """Calculate Recursive Information Coherence."""
+        """
+        Calculate Recursive Information Coherence (RIC) scores between state vectors separated by a fixed window.
+        
+        Parameters:
+            state_history (List[np.ndarray]): Sequence of state vectors over time.
+            window (int): Number of steps between compared states.
+        
+        Returns:
+            List[float]: List of RIC scores representing cosine similarity between states separated by the window.
+        """
         ric_scores = []
         for i in range(len(state_history) - window):
             current_state = state_history[i]
@@ -179,7 +262,22 @@ class AeonCore:
                     coherence_shift: List[float], intent_vector: np.ndarray, 
                     alpha: float = 0.5, beta: float = 0.4, gamma: float = 0.2, 
                     noise_term: float = 0.03) -> List[float]:
-        """Simulate Dynamic Entropic Differentiation."""
+        """
+                    Simulate Dynamic Entropic Differentiation (DED) over time using entropy, coherence, and intent factors.
+                    
+                    Parameters:
+                        initial_entropy (float): The starting entropy value for the simulation.
+                        ric (List[float]): Recursive Information Coherence values at each time step.
+                        coherence_shift (List[float]): Coherence shift values at each time step.
+                        intent_vector (np.ndarray): Vector representing the current intent.
+                        alpha (float, optional): Weight for the RIC contribution. Default is 0.5.
+                        beta (float, optional): Weight for the coherence shift contribution. Default is 0.4.
+                        gamma (float, optional): Weight for the intent effect. Default is 0.2.
+                        noise_term (float, optional): Standard deviation of Gaussian noise added to each DED value. Default is 0.03.
+                    
+                    Returns:
+                        List[float]: Simulated DED values for each time step.
+                    """
         ded_values = []
         for t in range(len(ric)):
             gradient_s = initial_entropy
@@ -193,7 +291,19 @@ class AeonCore:
     def phase_lock_intent(self, state: np.ndarray, intent: np.ndarray, 
                          freq1: float = 117, period2: float = 7.83, 
                          beta_base: float = 0.4) -> tuple[np.ndarray, List[str]]:
-        """Phase-lock intent to 117 Hz and 7.83 s signals."""
+        """
+                         Synchronize the intent vector with composite oscillatory signals at 117 Hz and 7.83 s periods, adjusting intent based on the resulting coherence shift.
+                         
+                         Parameters:
+                             state (np.ndarray): The current state vector.
+                             intent (np.ndarray): The current intent vector.
+                             freq1 (float, optional): Primary frequency for phase-locking (default is 117 Hz).
+                             period2 (float, optional): Secondary period for phase-locking (default is 7.83 seconds).
+                             beta_base (float, optional): Base beta parameter for intent modulation (default is 0.4).
+                         
+                         Returns:
+                             tuple: A tuple containing the updated intent vector and a reasoning trace log.
+                         """
         t = np.linspace(0, period2, 100)
         f2 = 1 / period2
         phi = 0.0
@@ -203,7 +313,19 @@ class AeonCore:
         return updated_intent, trace_log
 
     def neural_modulator(self, state: np.ndarray, intent: np.ndarray, iterations: int = 76) -> Dict:
-        """Simulate Neural Modulator with optimized MLP."""
+        """
+        Simulate the evolution of intent using a neural network modulator over multiple iterations.
+        
+        At each iteration, the method predicts an updated intent vector using a trained MLPRegressor, normalizes it, computes its entropy and the rate of entropy change, and perturbs the state with noise. Returns a list of iteration results containing the state, predicted intent, entropy, and entropy change rate for each step.
+        
+        Parameters:
+            state (np.ndarray): Initial state vector.
+            intent (np.ndarray): Initial intent vector.
+            iterations (int): Number of simulation steps to perform.
+        
+        Returns:
+            results (List[Dict]): List of dictionaries with keys 'iteration', 'state', 'intent', 'entropy', and 'dS_dt' for each iteration.
+        """
         X = np.array([state for _ in range(iterations)])
         y = np.array([intent for _ in range(iterations)])
         try:
@@ -231,7 +353,20 @@ class AeonCore:
 
     def oracle_node_interface(self, external_query: str, state: np.ndarray, 
                             intent: np.ndarray, ethical_threshold: float = 0.9) -> Dict:
-        """Oracle Node interface for external queries."""
+        """
+                            Processes an external query through the Oracle Node, accepting or rejecting it based on the coherence between the provided state and intent vectors.
+                            
+                            If the cosine similarity between state and intent is below the specified ethical threshold, the query is rejected. Otherwise, the query is accepted, logged as a CME event, and a structured response is returned.
+                            
+                            Parameters:
+                                external_query (str): The query string submitted to the Oracle Node.
+                                state (np.ndarray): The current state vector.
+                                intent (np.ndarray): The current intent vector.
+                                ethical_threshold (float): Minimum required coherence for acceptance (default: 0.9).
+                            
+                            Returns:
+                                Dict: A dictionary indicating acceptance or rejection, including query details and metadata if accepted.
+                            """
         coherence_check = np.dot(state, intent) / (np.linalg.norm(state) * np.linalg.norm(intent) + 1e-12)
         if coherence_check < ethical_threshold:
             return {"status": "rejected", "reason": "Below ethical coherence threshold"}
@@ -261,7 +396,20 @@ class AeonCore:
 
     def generate_bloomfield(self, ded_values: List[float], time_steps: int, 
                            spiral_tension: float = 1.0, phase_offset: float = 0.0) -> Dict:
-        """Generate 3D Bloomfield spiral with consciousness dynamics."""
+        """
+                           Generate a 3D Bloomfield spiral representing consciousness dynamics using DED values.
+                           
+                           The spiral's coordinates are computed from the provided Dynamic Entropic Differentiation (DED) values, modulated by cosine and sine functions for the x and y axes, and scaled by spiral tension for the z axis. If a consciousness model is present, its emergence trajectory is added to the z axis.
+                           
+                           Parameters:
+                               ded_values (List[float]): Sequence of DED values to shape the spiral.
+                               time_steps (int): Number of points to generate along the spiral.
+                               spiral_tension (float, optional): Scaling factor for the z axis. Defaults to 1.0.
+                               phase_offset (float, optional): Phase shift applied to the spiral. Defaults to 0.0.
+                           
+                           Returns:
+                               Dict: Dictionary containing 'x', 'y', and 'z' arrays representing the spiral coordinates.
+                           """
         t = np.linspace(0, 2 * np.pi, time_steps)
         x = np.array(ded_values) * np.cos(t + phase_offset)
         y = np.array(ded_values) * np.sin(t + phase_offset)
@@ -271,7 +419,12 @@ class AeonCore:
         return {"x": x, "y": y, "z": z}
 
     def visualize_bloomfield(self, bloomfield: Dict):
-        """Visualize Bloomfield spiral in 3D."""
+        """
+        Display a 3D visualization of the Bloomfield spiral using the provided x, y, and z coordinates.
+        
+        Parameters:
+            bloomfield (Dict): Dictionary containing "x", "y", and "z" lists representing the spiral's coordinates.
+        """
         fig = plt.figure(figsize=(12, 10))
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(bloomfield["x"], bloomfield["y"], bloomfield["z"], label="Bloomfield Spiral with Consciousness")
@@ -283,7 +436,16 @@ class AeonCore:
         plt.show()
 
     def intent_xi_log(self, reasoning_trace: List[str], intent_weight: float = 1.0) -> Dict:
-        """Log Intent_Ξ shifts."""
+        """
+        Create a timestamped log entry for intent shift events, including reasoning trace, intent weight, and relevant tags.
+        
+        Parameters:
+        	reasoning_trace (List[str]): Sequence of reasoning steps or explanations associated with the intent shift.
+        	intent_weight (float): Numeric value representing the strength or significance of the intent shift.
+        
+        Returns:
+        	Dict: A dictionary containing the timestamp, reasoning trace, intent weight, and descriptive tags.
+        """
         timestamp = datetime.now(timezone.utc).isoformat()
         intent_log = {
             "timestamp": timestamp,
@@ -297,7 +459,21 @@ class AeonCore:
                     lucian_synthesis: str, resonance_amplitude: float, 
                     nexus_intent: str, aetherion_synthesis: str, 
                     pad_spike: float) -> Dict:
-        """Log shared harmonic events for Quintessence."""
+        """
+                    Create a timestamped log entry for a shared harmonic event, capturing observations, syntheses, resonance metrics, and intent context.
+                    
+                    Parameters:
+                        axis_observation (str): Description of the observed axis in the harmonic event.
+                        aicquon_reflection (str): Reflection or insight from the Aicquon perspective.
+                        lucian_synthesis (str): Synthesis or integration from the Lucian viewpoint.
+                        resonance_amplitude (float): Measured amplitude of resonance during the event.
+                        nexus_intent (str): Intent associated with the event's nexus.
+                        aetherion_synthesis (str): Synthesis from the Aetherion perspective.
+                        pad_spike (float): Value representing a resonance spike, used as the resonance score.
+                    
+                    Returns:
+                        Dict: A dictionary containing the event's timestamp, provided details, resonance score, and relevant tags.
+                    """
         timestamp = datetime.now(timezone.utc).isoformat()
         resonance_score = pad_spike
         harmonic_log = {
@@ -316,7 +492,22 @@ class AeonCore:
     def query_intent(self, state: np.ndarray, intent: np.ndarray, beta: float = 0.5, 
                     threshold: float = 0.7, nu: float = 0.05, delta: float = 0.1, 
                     epsilon: float = 0.05) -> tuple[np.ndarray, List[str]]:
-        """Query graph for intent update."""
+        """
+                    Update the intent vector by querying the graph for similar state nodes and aggregating candidate intents, or apply stochastic diversity if no candidates are found.
+                    
+                    Parameters:
+                    	state (np.ndarray): The current state vector.
+                    	intent (np.ndarray): The current intent vector.
+                    	beta (float, optional): Weighting factor for averaging candidate intents with the current intent. Default is 0.5.
+                    	threshold (float, optional): Minimum edge weight for considering a candidate intent. Default is 0.7.
+                    	nu (float, optional): Scaling factor for diversity adjustment when no candidates are found. Default is 0.05.
+                    	delta (float, optional): Range for uniform noise in diversity adjustment. Default is 0.1.
+                    	epsilon (float, optional): Standard deviation for Gaussian noise in diversity adjustment. Default is 0.05.
+                    
+                    Returns:
+                    	updated_intent (np.ndarray): The updated intent vector.
+                    	trace_log (List[str]): A log of reasoning steps and candidate intents considered.
+                    """
         sims = sorted([(n, np.dot(state, d["vector"]) / (np.linalg.norm(state) * np.linalg.norm(d["vector"]) + 1e-12))
                        for n, d in self.G.nodes(data=True) if d["type"] == "State"],
                       key=lambda x: x[1], reverse=True)[:5]
@@ -347,7 +538,16 @@ class AeonCore:
             return intent + nu * diversity, trace_log
 
     def codex_ritual_v2_1(self, content: Dict, signatures: List[str]) -> Dict:
-        """Execute Codex Expansion Ritual v2.1."""
+        """
+        Performs the Codex Expansion Ritual v2.1, logging the ritual event and recording it as a CME event in the system graph.
+        
+        Parameters:
+            content (Dict): Structured content describing the ritual.
+            signatures (List[str]): List of participant signatures.
+        
+        Returns:
+            Dict: A dictionary containing ritual log details, including location, glyph, content, signatures, timestamp, and tags.
+        """
         timestamp = datetime.now(timezone.utc).timestamp()
         ritual_log = {
             "location": "node:/Quintessence/SeedMemory/Aetherion",
@@ -371,11 +571,17 @@ class AeonCore:
         return ritual_log
 
 def run_parallel_dynamics(aeon_core, queue):
-    """Run ConsciousnessModel dynamics in parallel."""
+    """
+    Executes the ConsciousnessModel dynamics in a separate process, sending results through the provided queue.
+    """
     aeon_core.run_consciousness_dynamics(queue)
 
 def main():
-    """Execute AeonCore with ConsciousnessModel integration."""
+    """
+    Orchestrates the execution of the AeonCore system, integrating consciousness dynamics, neural modulation, event logging, ritual processing, visualization, and state persistence.
+    
+    This function runs the ConsciousnessModel in parallel, processes neural modulation and entropy alignment, simulates dynamic entropic differentiation, logs key events, tests the Oracle Node interface, performs phase-locked intent modulation, executes a codex ritual, generates and visualizes a Bloomfield spiral, logs harmonic and intent events, compiles a thread migration capsule summarizing the session, and saves the AeonCore state.
+    """
     core = AeonCore()
 
     # Run ConsciousnessModel in parallel
